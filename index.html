@@ -3,10 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>API CIE-10</title>
+    <title>API CIE-10 - Búsqueda</title>
 </head>
 <body>
-    <h1>API CIE-10</h1>
-    <p>Esta API sirve los datos de la CIE-10 en formato JSON.</p>
+    <h1>API CIE-10 - Resultados de Búsqueda</h1>
+    <div id="resultados"></div>
+
+    <script src="api.js"></script>
+    <script>
+        // Mostrar los resultados en el DOM
+        window.onload = function() {
+            const resultadosDiv = document.getElementById('resultados');
+            if (window.resultados.length > 0) {
+                resultadosDiv.innerHTML = `<pre>${JSON.stringify(window.resultados, null, 2)}</pre>`;
+            } else {
+                resultadosDiv.innerHTML = "<p>No se encontraron resultados.</p>";
+            }
+        };
+    </script>
 </body>
 </html>
