@@ -3,81 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prueba de API CIE-10</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f7fa;
-            color: #333;
-            max-width: 600px;
-            margin: 40px auto;
-            padding: 20px;
-            text-align: center;
-        }
-        h1 {
-            color: #007bff;
-        }
-        input, button {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 1em;
-        }
-        button {
-            background: #007bff;
-            color: white;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #0056b3;
-        }
-        pre {
-            text-align: left;
-            background: #fff;
-            padding: 15px;
-            border-radius: 5px;
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
-            overflow-x: auto;
-        }
-    </style>
+    <title>API CIE-10</title>
 </head>
 <body>
-    <h1>Prueba de API CIE-10</h1>
-    
-    <input type="text" id="codigo" placeholder="Código (ej: A00)">
-    <input type="text" id="grupo" placeholder="Grupo (ej: COLERA)">
-    <input type="number" id="page" placeholder="Página (ej: 1)">
-    <input type="number" id="limit" placeholder="Límite de resultados (ej: 50)">
-    
-    <button onclick="consultarAPI()">Buscar</button>
-
-    <h3>Resultados:</h3>
-    <pre id="resultado">Esperando consulta...</pre>
-
-    <script>
-        function consultarAPI() {
-            const codigo = document.getElementById('codigo').value;
-            const grupo = document.getElementById('grupo').value;
-            const page = document.getElementById('page').value || 1;
-            const limit = document.getElementById('limit').value || 50;
-
-            let url = 'https://alejandropr23.github.io/JsonCie/?';
-            if (codigo) url += `codigo=${encodeURIComponent(codigo)}&`;
-            if (grupo) url += `grupo=${encodeURIComponent(grupo)}&`;
-            url += `page=${page}&limit=${limit}`;
-
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('resultado').textContent = JSON.stringify(data, null, 2);
-                })
-                .catch(error => {
-                    document.getElementById('resultado').textContent = "Error al obtener datos.";
-                    console.error("Error en la API:", error);
-                });
-        }
-    </script>
+    <script src="api.js"></script>
 </body>
 </html>
