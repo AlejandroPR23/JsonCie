@@ -1,27 +1,46 @@
-// api.js
+// URL del JSON alojado en GitHub Pages
+const API_URL = "https://alejandropr23.github.io/JsonCie/cie10.json";
 
-// Cargar el JSON de CIE-10
-fetch('cie10.json')
-    .then(response => response.json())
-    .then(data => {
-        // Obtener los parámetros de búsqueda desde la URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const codigo = urlParams.get('codigo');  // Ejemplo: ?codigo=A000
-        const grupo = urlParams.get('grupo');    // Ejemplo: ?grupo=COLERA
+// Función para obtener los datos con parámetros opcionales
+async function obtenerDatos(codigo, grupo) {
+    try {
+        const response = await fetch(API_URL);
+        const data = await response.json();
 
-        // Filtrar los datos si hay parámetros
-        let resultados = data;
+        let resultado = data;
+
+        // Filtrar por código si se proporciona
         if (codigo) {
-            resultados = resultados.filter(item => item.codigo === codigo);
+            resultado = resultado.filter(item => item.codigo === codigo.toUpperCase());
         }
+
+        // Filtrar por grupo si se proporciona
         if (grupo) {
-            resultados = resultados.filter(item => item.grupo.toLowerCase().includes(grupo.toLowerCase()));
+            resultado = resultado.filter(item => item.grupo.toLowerCase().includes(grupo.toLowerCase()));
         }
 
-        // Mostrar los resultados en la consola (puedes cambiar esto para mostrarlos en la página)
-        console.log("Resultados de búsqueda:", resultados);
+        return resultado;
+    } catch (error) {
+        console.error("Error al obtener los datos:", error);
+        return { error: "Error al procesar la solicitud." };
+    }
+}
 
-        // Devolver los resultados como una respuesta JSON para el front-end
-        window.resultados = resultados;
-    })
-    .catch(error => console.error("Error al cargar JSON:", error));
+// Función para manejar la respuesta en formato JSON
+async function procesarSolicitud() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const codigo = urlParams.get("codigo");
+    const grupo = urlParams.get("grupo");
+
+    // Obtener los datos filtrados
+    const resultado = await obtenerDatos(codigo, grupo);
+
+    // Devolver JSON en la respuesta
+    const jsonResponse = JSON.stringify(resultado, null, 2);
+
+    // Modificar los encabezados para que el navegador lo trate como JSON
+    document.body.innerHTML = `<pre>${jsonResponse}</pre>`;
+}
+
+// Ejecutar la función cuando la página cargue
+procesarSolicitud();
