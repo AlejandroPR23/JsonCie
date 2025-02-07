@@ -69,5 +69,3 @@ async function procesarSolicitud() {
 
 // Ejecutar la función cuando la página cargue
 procesarSolicitud();
-
-
