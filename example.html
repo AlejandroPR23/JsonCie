@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador CIE-10 Colombia</title>
+    <style>
+        /* Estilos generales */
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f7fa;
+            color: #333;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2em;
+            color: #007bff;
+            margin-bottom: 20px;
+        }
+
+        /* Caja de búsqueda */
+        .search-box {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        input {
+            width: calc(100% - 22px);
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+
+        input[disabled] {
+            background: #f0f0f0;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        /* Resultados */
+        .resultado {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: #f9f9f9;
+        }
+
+        .error-message {
+            color: red;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="search-box">
+        <h1>Buscador CIE-10</h1>
+        <input type="text" id="codigo" placeholder="Ingrese código (ej: A00)">
+        <button onclick="buscarEnfermedad()">Buscar</button>
+
+        <div class="resultado">
+            <input type="text" id="grupo" placeholder="Grupo" disabled>
+            <input type="text" id="segmento" placeholder="Segmento" disabled>
+        </div>
+        <p class="error-message" id="error-message"></p>
+    </div>
+
+    <script>
+        function buscarEnfermedad() {
+            const codigo = document.getElementById('codigo').value.toUpperCase();
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.textContent = '';
+
+            fetch('https://alejandropr23.github.io/JsonCie/cie10.json')
+                .then(response => response.json())
+                .then(data => {
+                    const resultado = data.find(item => item.codigo === codigo);
+
+                    if (resultado) {
+                        document.getElementById('grupo').value = resultado.grupo;
+                        document.getElementById('segmento').value = resultado.segmento;
+                    } else {
+                        errorMessage.textContent = 'Código no encontrado. Intenta de nuevo.';
+                        document.getElementById('grupo').value = '';
+                        document.getElementById('segmento').value = '';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al conectar con la API:', error);
+                    errorMessage.textContent = 'Ocurrió un error al buscar la información. Intenta más tarde.';
+                });
+        }
+    </script>
+</body>
+
+</html>
