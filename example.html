@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Buscador CIE-10 Colombia</title>
     <style>
-        /* Estilos generales */
+        /* Estilos generales (sin cambios) */
         body {
             font-family: Arial, sans-serif;
             background: #f4f7fa;
@@ -23,7 +23,7 @@
             margin-bottom: 20px;
         }
 
-        /* Caja de búsqueda */
+        /* Caja de búsqueda (sin cambios) */
         .search-box {
             background: white;
             padding: 25px;
@@ -66,7 +66,7 @@
             background: #0056b3;
         }
 
-        /* Resultados */
+        /* Resultados (sin cambios) */
         .resultado {
             margin-top: 20px;
             padding: 15px;
@@ -90,6 +90,7 @@
         <button onclick="buscarEnfermedad()">Buscar</button>
 
         <div class="resultado">
+            <input type="text" id="nombre" placeholder="nombre" disabled>
             <input type="text" id="grupo" placeholder="Grupo" disabled>
             <input type="text" id="segmento" placeholder="Segmento" disabled>
         </div>
@@ -97,29 +98,115 @@
     </div>
 
     <script>
-        function buscarEnfermedad() {
-            const codigo = document.getElementById('codigo').value.toUpperCase();
-            const errorMessage = document.getElementById('error-message');
-            errorMessage.textContent = '';
+        // URL del JSON
+        const API_URL = "https://alejandropr23.github.io/JsonCie/cie10.json";
 
-            fetch('https://alejandropr23.github.io/JsonCie/cie10.json')
-                .then(response => response.json())
-                .then(data => {
-                    const resultado = data.find(item => item.codigo === codigo);
+        // --- Función para Obtener Datos con Caché ---
+        async function getCie10DataWithCache() {
+            const localStorageKey = 'cie10DataCache'; // Clave para guardar los datos
+            const timestampKey = 'cie10Timestamp';    // Clave para guardar la fecha de descarga
+            // Duración de la caché en milisegundos (ej: 24 horas)
+            const CACHE_DURATION_MS = 24 * 60 * 60 * 1000;
 
-                    if (resultado) {
-                        document.getElementById('grupo').value = resultado.grupo;
-                        document.getElementById('segmento').value = resultado.segmento;
-                    } else {
-                        errorMessage.textContent = 'Código no encontrado. Intenta de nuevo.';
-                        document.getElementById('grupo').value = '';
-                        document.getElementById('segmento').value = '';
+            const cachedDataString = localStorage.getItem(localStorageKey);
+            const cachedTimestampString = localStorage.getItem(timestampKey);
+            const now = Date.now(); // Hora actual en milisegundos
+
+            // 1. Verificar si hay caché y si es reciente
+            if (cachedDataString && cachedTimestampString) {
+                const cacheTimestamp = parseInt(cachedTimestampString, 10);
+                if (!isNaN(cacheTimestamp) && (now - cacheTimestamp) < CACHE_DURATION_MS) {
+                    console.log("Usando datos CIE-10 desde caché de localStorage.");
+                    try {
+                        return JSON.parse(cachedDataString); // Devolver datos cacheados
+                    } catch (e) {
+                        console.error("Error al parsear datos cacheados:", e);
+                        localStorage.removeItem(localStorageKey); // Eliminar caché inválido
+                        localStorage.removeItem(timestampKey);
                     }
-                })
-                .catch(error => {
-                    console.error('Error al conectar con la API:', error);
-                    errorMessage.textContent = 'Ocurrió un error al buscar la información. Intenta más tarde.';
-                });
+                } else {
+                    console.log("Caché CIE-10 expirado o inválido.");
+                    localStorage.removeItem(localStorageKey); // Eliminar caché expirado
+                    localStorage.removeItem(timestampKey);
+                }
+            }
+
+            // 2. Si no hay caché válido, descargar de la red
+            console.log("Descargando nuevos datos CIE-10 desde la red...");
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+                const data = await response.json();
+
+                // 3. Guardar los datos frescos y la marca de tiempo en localStorage
+                try {
+                    localStorage.setItem(localStorageKey, JSON.stringify(data));
+                    localStorage.setItem(timestampKey, now.toString());
+                    console.log("Datos CIE-10 guardados en caché.");
+                } catch (e) {
+                    console.error("Error al guardar en localStorage (¿cuota excedida?):", e);
+                }
+
+                // 4. Devolver los datos frescos
+                return data;
+
+            } catch (error) {
+                console.error("Error al descargar o procesar datos CIE-10:", error);
+                // Intentar devolver caché viejo si la descarga falló
+                if (cachedDataString) {
+                    console.warn("Falló la descarga, devolviendo datos cacheados potencialmente obsoletos.");
+                    try {
+                        return JSON.parse(cachedDataString);
+                    } catch (e) {
+                        console.error("Error al parsear datos cacheados obsoletos:", e);
+                        throw error; // Lanzar error original si el caché viejo también es inválido
+                    }
+                }
+                throw error; // Lanzar error original si no hay caché
+            }
+        }
+
+        // --- Función Principal de Búsqueda (Modificada a async) ---
+        async function buscarEnfermedad() {
+            const codigo = document.getElementById('codigo').value.toUpperCase();
+            const nombreInput = document.getElementById('nombre');
+            const grupoInput = document.getElementById('grupo');
+            const segmentoInput = document.getElementById('segmento');
+            const errorMessage = document.getElementById('error-message');
+
+            // Limpiar resultados y errores anteriores
+            errorMessage.textContent = '';
+            grupoInput.value = '';
+            nombreInput.value = '';
+            segmentoInput.value = '';
+
+            try {
+                // 1. Obtener los datos (usando la función con caché)
+                const data = await getCie10DataWithCache();
+
+                // 2. Buscar el código dentro de los datos obtenidos
+                const resultado = data.find(item => item.codigo === codigo);
+
+                // 3. Mostrar el resultado o mensaje de no encontrado
+                if (resultado) {
+                    nombreInput.value = resultado.nombre;
+                    grupoInput.value = resultado.grupo;
+                    segmentoInput.value = resultado.segmento;
+                } else {
+                    errorMessage.textContent = 'Código no encontrado. Intenta de nuevo.';
+                }
+
+            } catch (error) {
+                // 4. Manejar errores (de red, de parseo, etc.)
+                console.error('Error en buscarEnfermedad:', error);
+                errorMessage.textContent = 'Ocurrió un error al buscar la información. Verifica tu conexión o intenta más tarde.';
+                // Asegurarse de que los campos estén vacíos en caso de error
+                nombreInput.value= '';
+                grupoInput.value = '';
+                segmentoInput.value = '';
+            }
         }
     </script>
 </body>
